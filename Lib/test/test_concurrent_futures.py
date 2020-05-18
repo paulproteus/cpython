@@ -2,8 +2,6 @@ from test import support
 
 # Skip tests if _multiprocessing wasn't built.
 support.import_module('_multiprocessing')
-# Skip tests if sem_open implementation is broken.
-support.import_module('multiprocessing.synchronize')
 
 from test.support.script_helper import assert_python_ok
 
@@ -158,6 +156,8 @@ class ProcessPoolForkMixin(ExecutorMixin):
     ctx = "fork"
 
     def get_context(self):
+        # `ProcessPoolExecutor` requires `multiprocessing.synchronize`.
+        support.import_module('multiprocessing.synchronize')
         if sys.platform == "win32":
             self.skipTest("require unix system")
         return super().get_context()
@@ -167,12 +167,18 @@ class ProcessPoolSpawnMixin(ExecutorMixin):
     executor_type = futures.ProcessPoolExecutor
     ctx = "spawn"
 
+    def get_context(self):
+        # `ProcessPoolExecutor` requires `multiprocessing.synchronize`.
+        support.import_module('multiprocessing.synchronize')
+
 
 class ProcessPoolForkserverMixin(ExecutorMixin):
     executor_type = futures.ProcessPoolExecutor
     ctx = "forkserver"
 
     def get_context(self):
+        # `ProcessPoolExecutor` requires `multiprocessing.synchronize`.
+        support.import_module('multiprocessing.synchronize')
         if sys.platform == "win32":
             self.skipTest("require unix system")
         return super().get_context()

@@ -85,6 +85,9 @@ def compile_dir(dir, maxlevels=None, ddir=None, force=False,
         raise ValueError('workers must be greater or equal to 0')
     if workers != 1:
         try:
+            # ProcessPoolExecutor may exist, but it cannot function if
+            # multiprocessing.synchronize is missing.
+            from multiprocessing import synchronize
             # Only import when needed, as low resource platforms may
             # fail to import it
             from concurrent.futures import ProcessPoolExecutor
