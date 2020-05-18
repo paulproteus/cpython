@@ -37,8 +37,16 @@ if os.name == 'posix':
     import _multiprocessing
     import _posixshmem
 
+    # Use sem_unlink() to clean up named semaphores.
+    # 
+    # sem_unlink() may be missing if the platform's libc lacks a working
+    # sem_open(). In that case, no named semaphores were ever opened, so
+    # no cleanup would be necessary.
+    if hasattr(_multiprocessing, 'sem_unlink'):
+        _CLEANUP_FUNCS.update({
+            'semaphore': _multiprocessing.sem_unlink,
+        })
     _CLEANUP_FUNCS.update({
-        'semaphore': _multiprocessing.sem_unlink,
         'shared_memory': _posixshmem.shm_unlink,
     })
 

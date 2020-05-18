@@ -28,9 +28,14 @@ __all__ = (
     'Executor',
     'wait',
     'as_completed',
-    'ProcessPoolExecutor',
     'ThreadPoolExecutor',
 )
+
+# Include `ProcessPoolExecutor` in `__all__` if the multiprocessing library
+# provides semaphores in this Python build.
+import _multiprocessing
+if hasattr(_multiprocessing, 'SemLock'):
+    __all__ = __all__ + ('ProcessPoolExecutor',)
 
 
 def __dir__():

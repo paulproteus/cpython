@@ -58,6 +58,15 @@ import itertools
 import sys
 import traceback
 
+# If multiprocessing.synchronize is missing, then ProcessPoolExecutor cannot
+# use the semaphores it needs.
+try:
+    import multiprocessing.synchronize
+except ImportError:
+    raise ImportError(
+        "concurrent.futures.process depends on multiprocessing.synchronizes's "
+        "semaphores, which are missing from this Python build"
+    )
 
 _threads_wakeups = weakref.WeakKeyDictionary()
 _global_shutdown = False

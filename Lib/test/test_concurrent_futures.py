@@ -2,8 +2,6 @@ from test import support
 
 # Skip tests if _multiprocessing wasn't built.
 support.import_module('_multiprocessing')
-# Skip tests if sem_open implementation is broken.
-support.import_module('multiprocessing.synchronize')
 
 from test.support.script_helper import assert_python_ok
 
@@ -24,7 +22,15 @@ from concurrent import futures
 from concurrent.futures._base import (
     PENDING, RUNNING, CANCELLED, CANCELLED_AND_NOTIFIED, FINISHED, Future,
     BrokenExecutor)
-from concurrent.futures.process import BrokenProcessPool
+try:
+    from concurrent.futures.process import (
+        BrokenProcessPool,
+        ProcessPoolExecutor,
+    )
+except ImportError:
+    # On low-resource platforms, concurrent.futures.process may be absent.
+    BrokenProcessPool = None
+    ProcessPoolExecutor = None
 from multiprocessing import get_context
 
 import multiprocessing.process
@@ -154,25 +160,34 @@ class ThreadPoolMixin(ExecutorMixin):
 
 
 class ProcessPoolForkMixin(ExecutorMixin):
-    executor_type = futures.ProcessPoolExecutor
+    executor_type = ProcessPoolExecutor
     ctx = "fork"
 
     def get_context(self):
+        if ProcessPoolExecutor is None:
+            self.skipTest("require ProcessPoolExecutor")
+        support.import_module('multiprocessing.synchronize')
         if sys.platform == "win32":
             self.skipTest("require unix system")
         return super().get_context()
 
 
 class ProcessPoolSpawnMixin(ExecutorMixin):
-    executor_type = futures.ProcessPoolExecutor
+    executor_type = ProcessPoolExecutor
     ctx = "spawn"
+
+    def get_context(self):
+        if ProcessPoolExecutor is None:
+            self.skipTest("require ProcessPoolExecutor")
 
 
 class ProcessPoolForkserverMixin(ExecutorMixin):
-    executor_type = futures.ProcessPoolExecutor
+    executor_type = ProcessPoolExecutor
     ctx = "forkserver"
 
     def get_context(self):
+        if ProcessPoolExecutor is None:
+            self.skipTest("require ProcessPoolExecutor")
         if sys.platform == "win32":
             self.skipTest("require unix system")
         return super().get_context()
@@ -370,7 +385,7 @@ class ExecutorShutdownTest:
 
         See https://bugs.python.org/issue39205.
         """
-        if self.executor_type == futures.ProcessPoolExecutor:
+        if self.executor_type == ProcessPoolExecutor:
             raise unittest.SkipTest(
                 "Hangs due to https://bugs.python.org/issue39205")
 
